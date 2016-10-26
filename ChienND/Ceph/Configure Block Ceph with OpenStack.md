@@ -6,6 +6,8 @@ Mục lục:
 
 [B. CONFIGURE OPENSTACK TO USE CEPH](#B)
 
+[C. TEST BACKEND](#C)
+
 <img src=http://i.imgur.com/cSSCBUc.png>
 
 <a name="A"></a>
@@ -20,16 +22,16 @@ ceph osd pool create backups 128
 ceph osd pool create vms 128
 ```
 
-**2. CONFIGURE OPENSTACK CEPH CLIENTS**
+**2. CONFIGURE OPENSTACK**
 
-- Copy ceph.conf, ceph.client.admin.keyring
-
-- Install
+- Install:
 
 ```sh
-apt-get install python-rbd (glance-api)
-apt-get install ceph-common (nova-compute, cinder-backup, cinder-volume)
+apt-get install python-rbd (Cho glance-api)
+apt-get install ceph-common (Cho nova-compute, cinder-backup, cinder-volume)
 ```
+
+- Copy `ceph.conf, ceph.client.admin.keyring` từ Ceph sang OpenStack.
 
 - SETUP CEPH CLIENT AUTHENTICATION
 
@@ -56,7 +58,7 @@ REDACTED_SECRET
 ```sh
 cat > secret.xml <<EOF
 <secret ephemeral='no' private='no'>
-  <uuid>457eb676-33da-42ec-9a8c-9293d545c337</uuid>
+  <uuid>REDACTED_SECRET</uuid>
   <usage type='ceph'>
     <name>client.cinder secret</name>
   </usage>
@@ -66,7 +68,7 @@ EOF
 
 ```sh
 sudo virsh secret-define --file secret.xml
-Secret 457eb676-33da-42ec-9a8c-9293d545c337 created
+
 sudo virsh secret-set-value --secret REDACTED_SECRET --base64 $(cat client.cinder.key) && rm client.cinder.key secret.xml
 ```
 
@@ -80,6 +82,7 @@ sudo virsh secret-set-value --secret REDACTED_SECRET --base64 $(cat client.cinde
 ```sh
 [glance_store]
 
+show_image_direct_url = True
 stores = rbd
 rbd_store_pool = images
 rbd_store_user = glance
@@ -90,7 +93,7 @@ default_store = rbd
 
 **2. Configure Cinder**
 
-`vim/etc/cinder/cinder.conf`
+`vim /etc/cinder/cinder.conf`
 
 ```sh
 [DEFAULT]
@@ -125,6 +128,7 @@ report_discard_supported = true
 **3. Configure Nova**
 
 `vim /etc/nova/nova.conf`
+
 ```sh
 [libvirt]
 images_type = rbd
@@ -143,6 +147,10 @@ sudo service cinder-volume restart
 sudo service cinder-backup restart
 ```
 
+<a name="C"></a>
+###C. Test backend
+
+<img src=http://i.imgur.com/6uzig1C.png>
 
 
 
